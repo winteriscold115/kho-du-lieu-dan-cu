@@ -27,6 +27,9 @@ var SCHEMA = {
   DauTuCong: ['ma_du_an','ten_du_an','chu_dau_tu','tong_muc_dau_tu','da_giai_ngan','ty_le_giai_ngan','tien_do','thoi_han','trang_thai','ghi_chu','nguon_du_lieu']
 };
 var ID_KEY = { NghiQuyet:'ma_nq', GiamSat:'ma_gs', KienNghiCuTri:'ma_kn', NganSach:'ma_chi_tieu', DauTuCong:'ma_du_an' };
+// Cột kiểu số (giữ định dạng số trong Sheet). Các cột còn lại ép về văn bản thuần
+// để Google Sheet không tự đổi chuỗi như "8%" thành 0.08.
+var NUMERIC_COLS = { du_toan:1, thuc_hien:1, ty_le:1, tong_muc_dau_tu:1, da_giai_ngan:1, ty_le_giai_ngan:1 };
 var CATALOG_SHEETS = ['DM_DonVi','DM_LinhVuc','DM_TrangThai'];
 
 // ─────────────────────────── Điểm vào Web App ───────────────────────────
@@ -128,8 +131,13 @@ function setupSheets() {
     var sh = ss.getSheetByName(name) || ss.insertSheet(name);
     sh.clear();
     var header = SCHEMA[name];
-    sh.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight('bold');
     var rows = (SEED[name] || []).map(function (o) { return header.map(function (k) { return o[k] != null ? o[k] : ''; }); });
+    // Ép định dạng TỪNG CỘT trước khi ghi: cột số -> số, các cột còn lại -> văn bản thuần.
+    var numRows = 1 + rows.length;
+    for (var c = 0; c < header.length; c++) {
+      sh.getRange(1, c + 1, numRows, 1).setNumberFormat(NUMERIC_COLS[header[c]] ? '#,##0' : '@');
+    }
+    sh.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight('bold');
     if (rows.length) sh.getRange(2, 1, rows.length, header.length).setValues(rows);
     sh.setFrozenRows(1);
   });
