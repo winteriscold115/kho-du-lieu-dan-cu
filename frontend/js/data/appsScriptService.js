@@ -16,7 +16,8 @@ class AppsScriptService {
 
   async _get(params) {
     const qs = new URLSearchParams(params).toString();
-    const res = await fetch(`${this.baseUrl}?${qs}`, { method: 'GET' });
+    // cache:'no-store' để luôn lấy dữ liệu mới nhất từ Sheet (Apps Script GET có thể bị trình duyệt cache).
+    const res = await fetch(`${this.baseUrl}?${qs}`, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!json.ok) throw new Error(json.error || 'Lỗi không xác định từ máy chủ');
     return json.data;
