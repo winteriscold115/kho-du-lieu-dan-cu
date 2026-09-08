@@ -1,0 +1,13 @@
+# Phụ thuộc & build
+node_modules/
+dist/
+build/
+
+# Hệ điều hành / trình soạn thảo
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Nhật ký
+*.log

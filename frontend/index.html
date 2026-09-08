@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kho dữ liệu dân cử dùng chung</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">HĐND</div>
+      <div>
+        <div id="app-name" class="app-name">Kho dữ liệu dân cử dùng chung</div>
+        <div id="app-subtitle" class="app-subtitle">Giai đoạn 1 — Bản thử nghiệm</div>
+      </div>
+    </div>
+    <div id="data-source" class="data-source">Đang tải…</div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav id="nav"><div class="muted" style="padding:12px">Đang tải…</div></nav>
+    </aside>
+    <main id="view" class="content">
+      <div class="loading">Đang tải dữ liệu…</div>
+    </main>
+  </div>
+
+  <!-- Thứ tự nạp: cấu hình → tiện ích → dữ liệu → lớp truy cập → logic → app -->
+  <script src="js/config.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/data/schema.js"></script>
+  <script src="js/data/sampleData.js"></script>
+  <script src="js/data/mockService.js"></script>
+  <script src="js/data/appsScriptService.js"></script>
+  <script src="js/data/dataService.js"></script>
+  <script src="js/alerts.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
