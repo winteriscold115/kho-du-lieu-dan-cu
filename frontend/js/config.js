@@ -11,10 +11,10 @@ const CONFIG = {
   //  true  → dùng dữ liệu mẫu nhúng sẵn trong trình duyệt (mở là chạy, không cần Sheet)
   //  false → gọi Google Apps Script Web App (đặt URL bên dưới)
   // ─────────────────────────────────────────────────────────────
-  USE_MOCK: true,
+  USE_MOCK: false,
 
   // Dán URL Web App sau khi Deploy Apps Script (dạng .../exec). Xem README mục "Nối Google Sheet".
-  APPS_SCRIPT_URL: '',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwHgxmvhiuhlWQk0lUD-Hg1ypXNIOJc6j4p-BPWTnqDpq6XHEsNQxP2TL8ex3KfIb50/exec',
 
   // ─────────────────────────────────────────────────────────────
   // NGƯỠNG CẢNH BÁO  — [CHỜ BAN XÁC NHẬN]
