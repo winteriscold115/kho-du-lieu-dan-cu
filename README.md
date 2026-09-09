@@ -110,6 +110,22 @@ Chỉ cần viết một lớp mới tuân theo "hợp đồng" trong `dataServi
 
 ---
 
+## 4b. Phiếu yêu cầu nghiệp vụ (các Ban điền online)
+
+Trang **📝 Phiếu yêu cầu** số hóa Phiếu xác định yêu cầu nghiệp vụ: phần đầu (Đơn vị, Cán bộ
+đầu mối, Cán bộ phối hợp) + 6 câu hỏi nghiệp vụ kèm gợi ý. Bấm **Gửi phiếu** → lưu vào tab
+Google Sheet `PhieuYeuCau`; phía dưới hiển thị danh sách phiếu đã gửi.
+
+> Chức năng **ghi** cần backend biết tab mới. Sau khi cập nhật `Code.gs`, phải **Deploy phiên bản mới**
+> thì Web App mới nhận `PhieuYeuCau` (URL giữ nguyên).
+
+**Bật tính năng này trên Sheet của bạn:**
+1. Mở Apps Script → dán lại **toàn bộ** `apps-script/Code.gs` mới → **Lưu**.
+2. Chọn hàm **`themTabPhieu`** → **Run** (tạo tab `PhieuYeuCau`; không đụng dữ liệu khác).
+3. **Deploy → Manage deployments →** bấm ✏️ (Edit) ở deployment đang chạy → **Version: New version** → **Deploy**.
+   *(Giữ nguyên URL `.../exec` — không cần sửa lại `config.js`.)*
+4. Xong: mở trang **Phiếu yêu cầu**, điền thử và **Gửi** — kiểm tra dòng mới xuất hiện trong tab `PhieuYeuCau`.
+
 ## 5. Ngưỡng cảnh báo — **[CHỜ BAN XÁC NHẬN]**
 
 Đặt trong `frontend/js/config.js → CONFIG.ALERT`. Mặc định (cần từng Ban chốt lại):

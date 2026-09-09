@@ -24,9 +24,11 @@ var SCHEMA = {
   GiamSat: ['ma_gs','ten_gs','linh_vuc','don_vi_chiu_gs','thoi_gian','ket_luan','kien_nghi','trang_thai_thuc_hien_kn','thoi_han','ghi_chu','nguon_du_lieu'],
   KienNghiCuTri: ['ma_kn','noi_dung','nhom_linh_vuc','don_vi_giai_quyet','ngay_tiep_nhan','thoi_han_giai_quyet','trang_thai','ket_qua','ghi_chu','nguon_du_lieu'],
   NganSach: ['ma_chi_tieu','ten_chi_tieu','linh_vuc','don_vi','du_toan','thuc_hien','ty_le','ky_bao_cao','ghi_chu','nguon_du_lieu'],
-  DauTuCong: ['ma_du_an','ten_du_an','chu_dau_tu','tong_muc_dau_tu','da_giai_ngan','ty_le_giai_ngan','tien_do','thoi_han','trang_thai','ghi_chu','nguon_du_lieu']
+  DauTuCong: ['ma_du_an','ten_du_an','chu_dau_tu','tong_muc_dau_tu','da_giai_ngan','ty_le_giai_ngan','tien_do','thoi_han','trang_thai','ghi_chu','nguon_du_lieu'],
+  // Phiếu xác định yêu cầu nghiệp vụ (các Ban điền online)
+  PhieuYeuCau: ['id','thoi_gian','don_vi','can_bo_dau_moi','can_bo_phoi_hop','q1_bai_toan','q2_ho_so','q3_thong_tin','q4_canh_bao','q5_san_pham','q6_nguon','ghi_chu']
 };
-var ID_KEY = { NghiQuyet:'ma_nq', GiamSat:'ma_gs', KienNghiCuTri:'ma_kn', NganSach:'ma_chi_tieu', DauTuCong:'ma_du_an' };
+var ID_KEY = { NghiQuyet:'ma_nq', GiamSat:'ma_gs', KienNghiCuTri:'ma_kn', NganSach:'ma_chi_tieu', DauTuCong:'ma_du_an', PhieuYeuCau:'id' };
 // Cột kiểu số (giữ định dạng số trong Sheet). Các cột còn lại ép về văn bản thuần
 // để Google Sheet không tự đổi chuỗi như "8%" thành 0.08.
 var NUMERIC_COLS = { du_toan:1, thuc_hien:1, ty_le:1, tong_muc_dau_tu:1, da_giai_ngan:1, ty_le_giai_ngan:1 };
@@ -128,6 +130,7 @@ function setupSheets() {
   var ss = _ss();
   // 1) Tạo các tab dữ liệu + header + nạp dữ liệu mẫu
   Object.keys(SCHEMA).forEach(function (name) {
+    if (name === 'PhieuYeuCau') return; // tab phiếu do các Ban gửi — KHÔNG xóa/nạp lại ở đây
     var sh = ss.getSheetByName(name) || ss.insertSheet(name);
     sh.clear();
     var header = SCHEMA[name];
@@ -155,7 +158,26 @@ function setupSheets() {
     var sh = ss.getSheetByName(n);
     if (sh && ss.getSheets().length > 1) { try { ss.deleteSheet(sh); } catch (e) {} }
   });
+  // 4) Tạo tab Phiếu yêu cầu (không xóa dữ liệu nếu đã có)
+  themTabPhieu();
   SpreadsheetApp.getUi && SpreadsheetApp.flush();
+}
+
+/**
+ * themTabPhieu — Tạo tab PhieuYeuCau + hàng tiêu đề nếu chưa có.
+ * An toàn để chạy nhiều lần: KHÔNG xóa các phiếu đã gửi.
+ */
+function themTabPhieu() {
+  var ss = _ss();
+  var name = 'PhieuYeuCau';
+  var header = SCHEMA[name];
+  var sh = ss.getSheetByName(name) || ss.insertSheet(name);
+  // Ép toàn bộ vùng về văn bản thuần để giữ nguyên nội dung nhập
+  sh.getRange(1, 1, Math.max(sh.getMaxRows(), 1), header.length).setNumberFormat('@');
+  if (sh.getLastRow() === 0) {
+    sh.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+  }
 }
 
 // Dữ liệu mẫu nạp vào Sheet (đồng bộ với frontend/js/data/sampleData.js).

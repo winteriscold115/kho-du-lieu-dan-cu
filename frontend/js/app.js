@@ -52,6 +52,7 @@ const App = {
       ...GROUP_KEYS.map((g) => ({ hash: `#group/${g}`, icon: SCHEMA[g].icon, label: SCHEMA[g].label })),
       { hash: '#baocao', icon: '📈', label: 'Báo cáo & biểu đồ' },
       { hash: '#canhbao', icon: '🔔', label: `Cảnh báo${alertCount ? ` (${alertCount})` : ''}` },
+      { hash: '#phieu', icon: '📝', label: 'Phiếu yêu cầu' },
     ];
     nav.innerHTML = items.map((it) =>
       `<a href="${it.hash}" data-hash="${it.hash.split('/')[0]}"><span>${it.icon}</span> ${it.label}</a>`
@@ -74,6 +75,7 @@ const App = {
     if (path === 'group' && SCHEMA[arg]) return this.renderGroup(arg, view);
     if (path === 'baocao') return this.renderReports(view);
     if (path === 'canhbao') return this.renderAlerts(view);
+    if (path === 'phieu') return this.renderPhieu(view);
     return this.renderDashboard(view);
   },
 
@@ -351,6 +353,88 @@ const App = {
     view.querySelector('#a-group').addEventListener('change', (e) => { st.group = e.target.value; render(); });
     view.querySelector('#a-level').addEventListener('change', (e) => { st.level = e.target.value; render(); });
     render();
+  },
+
+  // ───────────────────────── Phiếu yêu cầu nghiệp vụ (các Ban điền) ─────────────────────────
+  renderPhieu(view) {
+    const F = PHIEU_FORM;
+    const headerInputs = F.header.map((f) => `
+      <label class="field">
+        <span>${Util.esc(f.label)}${f.required ? ' <b class="req">*</b>' : ''}</span>
+        <input data-k="${f.key}" type="text" ${f.required ? 'required' : ''}>
+      </label>`).join('');
+    const questionInputs = F.questions.map((q) => `
+      <div class="field">
+        <label><span>${Util.esc(q.title)}</span></label>
+        <p class="hint"><b>Gợi ý:</b> ${Util.esc(q.hint)}</p>
+        <textarea data-k="${q.key}" rows="3" placeholder="Nhập ý kiến của Ban/đơn vị…"></textarea>
+      </div>`).join('');
+
+    view.innerHTML = `
+      <h1>📝 Phiếu xác định yêu cầu nghiệp vụ</h1>
+      <p class="muted">Các Ban/đơn vị điền thông tin dưới đây; nội dung gửi sẽ được lưu vào Google Sheet (tab <code>PhieuYeuCau</code>).</p>
+      <form id="phieu-form" class="phieu-form">
+        <div class="phieu-head">${headerInputs}</div>
+        ${questionInputs}
+        <div id="phieu-msg"></div>
+        <button type="submit" class="btn">Gửi phiếu</button>
+      </form>
+      <h2>Phiếu đã gửi</h2>
+      <div id="phieu-list" class="muted">Đang tải…</div>`;
+
+    const form = view.querySelector('#phieu-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const row = { id: 'PH-' + Date.now(), thoi_gian: this._now() };
+      view.querySelectorAll('#phieu-form [data-k]').forEach((el) => { row[el.dataset.k] = el.value.trim(); });
+      if (!row.don_vi) { this._phieuMsg('Vui lòng nhập Đơn vị.', 'bad'); return; }
+      const btn = form.querySelector('button[type=submit]');
+      btn.disabled = true; this._phieuMsg('Đang gửi…', '');
+      try {
+        await DataService.create('PhieuYeuCau', row);
+        this._phieuMsg('✅ Đã gửi phiếu thành công. Cảm ơn Ban/đơn vị!', 'ok');
+        form.reset();
+        this._loadPhieuList();
+      } catch (err) {
+        this._phieuMsg('Không gửi được: ' + err.message + '. Có thể backend chưa cập nhật tab PhieuYeuCau (xem README).', 'bad');
+      } finally { btn.disabled = false; }
+    });
+    this._loadPhieuList();
+  },
+
+  _now() {
+    const d = new Date(); const p = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  },
+
+  _phieuMsg(text, cls) {
+    const el = document.getElementById('phieu-msg');
+    if (el) el.innerHTML = `<div class="form-msg ${cls}">${Util.esc(text)}</div>`;
+  },
+
+  async _loadPhieuList() {
+    const box = document.getElementById('phieu-list');
+    if (!box) return;
+    try {
+      const rows = await DataService.list('PhieuYeuCau');
+      if (!rows.length) { box.innerHTML = '<p class="muted">Chưa có phiếu nào được gửi.</p>'; return; }
+      const trs = rows.slice().reverse().map((r) => {
+        const q1 = (r.q1_bai_toan || '');
+        return `<tr>
+          <td>${Util.esc(r.thoi_gian)}</td>
+          <td>${Util.esc(r.don_vi)}</td>
+          <td>${Util.esc(r.can_bo_dau_moi)}</td>
+          <td>${Util.esc(q1.slice(0, 90))}${q1.length > 90 ? '…' : ''}</td>
+        </tr>`;
+      }).join('');
+      box.innerHTML = `<div class="table-meta">Tổng <b>${rows.length}</b> phiếu.</div>
+        <div class="table-scroll"><table>
+        <thead><tr><th>Thời gian</th><th>Đơn vị</th><th>Cán bộ đầu mối</th><th>Bài toán (tóm tắt)</th></tr></thead>
+        <tbody>${trs}</tbody></table></div>`;
+    } catch (err) {
+      box.innerHTML = `<p class="muted">Chưa đọc được danh sách phiếu (${Util.esc(err.message)}).
+        Nếu vừa thêm tab, hãy cập nhật code Apps Script rồi <b>Deploy phiên bản mới</b> (xem README mục Phiếu yêu cầu).</p>`;
+    }
   },
 };
 
